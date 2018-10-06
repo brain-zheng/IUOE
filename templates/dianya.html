@@ -1,0 +1,136 @@
+{% extends 'layout.html' %}
+
+{% block title %}电压监控{% endblock %}
+
+{% block js%}
+    <script type="text/javascript">
+        //初始化echarts图表
+        var myChart = echarts.init(document.getElementById('chartmain'));
+
+        //显示标题，图例和空的坐标轴
+        myChart.setOption({
+            title:{
+                text:'实时电压监测数据'
+            },
+            xAxis:{
+                type:"category",
+                boundaryGap:false,
+                //日期时间数据从后台获取
+                data:[]
+            },
+            yAxis:{
+                boundaryGap:[0,'100%'],
+                type:'value',
+                axisLabel:{
+                    formatter:'{value}(V)'
+                }
+            },
+            series:[{
+                name:'成交',
+                type:'line',
+                smooth:true, //数据光滑过度
+                symbol:'none', //下一个数据点
+                stack:'a',
+                areaStyle:{
+                    normal:{
+                        color:'white'
+                    }
+                },
+                //电流数据从后台获取
+                data:[]
+            }]
+        });
+
+        myChart.showLoading();  //数据加载完成前先显示一段简单的loading动画
+
+        var dianya_y = [];//存放小时时间
+        var dianya_mon = []; //存放小时时间
+        var dianya_d = []; //存放小时时间
+        var dianya_h = []; //存放小时时间
+        var dianya_m = []; //存放分钟时间
+        var dianya_s = [];//存放秒数时间
+        var dianya_time = [];
+        var dianya_data = []; //存放电流数据
+
+        //异步从后台获取数据
+        function ajax_post(shift) {
+            $.ajax({
+                url: "/dianya/",
+                type: 'post',
+                data: {},
+                dataType: 'json',
+                success: function (data) {
+                    if (data) {
+                        //电压值
+                        dianya_data.push(data[0]['dianya_value']);
+
+                        //时间值
+                        dianya_y.push(data[1]['dianya_y']);
+                        dianya_mon.push(data[2]['dianya_mon']);
+                        dianya_d.push(data[3]['dianya_d']);
+                        dianya_h.push(data[4]['dianya_h']);
+                        dianya_m.push(data[5]['dianya_m']);
+                        dianya_s.push(data[6]['dianya_s']);
+
+                        //时间设置
+                        var now = [dianya_h[dianya_h.length - 1] + ":" + dianya_m[dianya_m.length - 1] + ":" + dianya_s[dianya_s.length - 1]];
+                        dianya_time.push(now);
+
+                        //移除数组中的第一个元素
+                        if (shift) {
+                            dianya_y.shift();
+                            dianya_mon.shift();
+                            dianya_d.shift();
+                            dianya_h.shift();
+                            dianya_m.shift();
+                            dianya_s.shift();
+                            dianya_time.shift();
+                            dianya_data.shift();
+                        }
+                        myChart.hideLoading();  //隐藏动画
+                        myChart.setOption({
+                            title: {
+                                text: '实时电压监测数据'
+                            },
+                            xAxis: {
+                                type: "category",
+                                boundaryGap: false,
+                                //日期时间
+                                data: dianya_time
+                            },
+                            yAxis: {
+                                boundaryGap: [0, '100%'],
+                                type: 'value',
+                                axisLabel: {
+                                    formatter: '{value}(V)'
+                                }
+                            },
+                            series: [{
+                                name: '成交',
+                                type: 'line',
+                                smooth: true, //数据光滑过度
+                                symbol: 'none', //下一个数据点
+                                stack: 'a',
+                                areaStyle: {
+                                    normal: {
+                                        color: 'white'
+                                    }
+                                },
+                                //电流数据
+                                data: dianya_data
+                            }]
+                        });
+                    }
+                }
+            });
+        }
+
+    for(var i=0;i<10;i++){
+        ajax_post()
+    }
+
+    setInterval(function () {
+        ajax_post(true)
+    },1000);
+    </script>
+{% endblock %}

@@ -1,0 +1,135 @@
+{% extends 'layout.html' %}
+
+{% block title %}功率监控{% endblock %}
+
+{% block js%}
+    <script type="text/javascript">
+        //初始化echarts图表
+        var myChart = echarts.init(document.getElementById('chartmain'));
+
+        //显示标题，图例和空的坐标轴
+        myChart.setOption({
+            title:{
+                text:'实时功率监测数据'
+            },
+            xAxis:{
+                type:"category",
+                boundaryGap:false,
+                //日期时间数据从后台获取
+                data:[]
+            },
+            yAxis:{
+                boundaryGap:[0,'100%'],
+                type:'value',
+                axisLabel:{
+                    formatter:'{value}(W)'
+                }
+            },
+            series:[{
+                name:'成交',
+                type:'line',
+                smooth:true, //数据光滑过度
+                symbol:'none', //下一个数据点
+                stack:'a',
+                areaStyle:{
+                    normal:{
+                        color:'white'
+                    }
+                },
+                //电流数据从后台获取
+                data:[]
+            }]
+        });
+
+        myChart.showLoading();  //数据加载完成前先显示一段简单的loading动画
+
+        var gonglv_y = [];//存放小时时间
+        var gonglv_mon = []; //存放小时时间
+        var gonglv_d = []; //存放小时时间
+        var gonglv_h = []; //存放小时时间
+        var gonglv_m = []; //存放分钟时间
+        var gonglv_s = [];//存放秒数时间
+        var gonglv_time = [];
+        var gonglv_data = []; //存放电流数据
+
+        //异步从后台获取数据
+        function ajax_post(shift) {
+            $.ajax({
+                url: "/gonglv/",
+                type:'post',
+                data:{},
+                dataType:'json',
+                success:function (data) {
+                    if(data){
+                        gonglv_data.push(data[0]['gonglv_value']);
+
+                        //时间值
+                        gonglv_y.push(data[1]['gonglv_y']);
+                        gonglv_mon.push(data[2]['gonglv_mon']);
+                        gonglv_d.push(data[3]['gonglv_d']);
+                        gonglv_h.push(data[4]['gonglv_h']);
+                        gonglv_m.push(data[5]['gonglv_m']);
+                        gonglv_s.push(data[6]['gonglv_s']);
+
+                        //时间设置
+                        var now = [gonglv_h[gonglv_h.length-1]+":"+gonglv_m[gonglv_m.length-1]+":"+gonglv_s[gonglv_s.length-1]];
+                        gonglv_time.push(now);
+
+                        //移除数组中的第一个元素
+                        if(shift){
+                             gonglv_y.shift();
+                             gonglv_mon.shift();
+                             gonglv_d.shift();
+                             gonglv_h.shift();
+                             gonglv_m.shift();
+                             gonglv_s.shift();
+                             gonglv_time.shift();
+                             gonglv_data.shift();
+                        }
+                        myChart.hideLoading();  //隐藏动画
+                        myChart.setOption({
+                            title:{
+                                text:'实时功率监测数据'
+                            },
+                            xAxis:{
+                                type:"category",
+                                boundaryGap:false,
+                                //日期时间
+                                data:gonglv_time
+                            },
+                            yAxis:{
+                                boundaryGap:[0,'100%'],
+                                type:'value',
+                                axisLabel:{
+                                    formatter:'{value}(W)'
+                                }
+                            },
+                            series:[{
+                                name:'成交',
+                                type:'line',
+                                smooth:true, //数据光滑过度
+                                symbol:'none', //下一个数据点
+                                stack:'a',
+                                areaStyle:{
+                                    normal:{
+                                        color:'white'
+                                    }
+                                },
+                                //电流数据
+                                data:gonglv_data
+                            }]
+                        });
+                    }
+                }
+            });
+        }
+
+    for(var i=0;i<10;i++){
+        ajax_post()
+    }
+
+    setInterval(function () {
+        ajax_post(true)
+    },1000);
+    </script>
+{% endblock %}

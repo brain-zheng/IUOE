@@ -1,0 +1,3 @@
+Migrations for 'SE':
+  SE\migrations\0008_auto_20181003_2003.py
+    - Alter field user_id on value

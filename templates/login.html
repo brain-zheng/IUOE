@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>登入页面</title>
+    <!-- Bootstrap 核心 CSS 文件 -->
+    <link href="/static/bootstrap-3.3.7-dist/css/bootstrap.css" rel="stylesheet">
+    <!--font-awesome 核心我CSS 文件-->
+    <link href="/static/font-awesome-4.7.0/css/font-awesome.css" rel="stylesheet">
+    <!--css样式-->
+    <link rel="stylesheet" href="/static/login.css">
+    <!-- 在bootstrap.min.js 之前引入 -->
+    <script src="/static/jquery.js"></script>
+    <!-- Bootstrap 核心 JavaScript 文件 -->
+    <script src="/static/bootstrap-3.3.7-dist/js/bootstrap.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="form row" style="margin-top: 200px">
+            <form class="form-horizontal col-sm-offset-3 col-md-offset-3" id="login_form" action="">
+                <h3 class="form-title">Login to your account</h3>
+                <div class="col-sm-9 col-md-9">
+                    <div class="form-group">
+                        <i class="fa fa-user fa-lg"></i>
+                        <input class="form-control required" type="text" placeholder="Username" name="username" autofocus="autofocus" maxlength="20" id="username"/>
+                    </div>
+                    <div class="form-group">
+                        <i class="fa fa-lock fa-lg"></i>
+                        <input class="form-control required" type="password" placeholder="Password" name="password" maxlength="8" id="password"/>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="checkbox">
+                            <input type="checkbox" name="remember" value="1"/> Remember me
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <a href="{% url 'create_account' %}" id="register_btn" class="btn btn-info pull-left">Create an account</a>
+                        <a class="btn btn-success pull-right" id="Login">Login</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script >
+        $(function () {
+            $('#Login').click(function () {
+                if($('#username').val() && $('#password').val()) {
+                    $.ajax({
+                        type: 'post',
+                        url: '/login/',
+                        data: $("form").serialize(),
+                        success: function (data) {
+                            console.log(data);
+                            if(data==="1"){
+                                console.log(1);
+                                $('#Login').attr('href','{% url 'dianliu' %}');
+                            }else if(data==="2"){
+                                console.log(2);
+                                $('#Login').attr('href','');
+                                alert("密码错误");
+                            }else if(data==="3"){
+                                console.log(3);
+                                $('#Login').attr('href','');
+                                alert('用户不存在');
+                            }else{
+                                $('#Login').attr('href','');
+                                alert('未知错误');
+                            }
+                        }
+                    });
+                }else{
+                    alert("用户名和密码不能输入为空");
+                    $('#username').attr('href',' ');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

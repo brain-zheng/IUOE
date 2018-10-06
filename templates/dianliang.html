@@ -1,0 +1,136 @@
+{% extends 'layout.html' %}
+
+{% block title %}电量监控{% endblock %}
+
+{% block js%}
+    <script type="text/javascript">
+        //初始化echarts图表
+        var myChart = echarts.init(document.getElementById('chartmain'));
+
+        //显示标题，图例和空的坐标轴
+        myChart.setOption({
+            title:{
+                text:'实时电量监测数据'
+            },
+            xAxis:{
+                type:"category",
+                boundaryGap:false,
+                //日期时间数据从后台获取
+                data:[]
+            },
+            yAxis:{
+                boundaryGap:[0,'100%'],
+                type:'value',
+                axisLabel:{
+                    formatter:'{value}(C)'
+                }
+            },
+            series:[{
+                name:'成交',
+                type:'line',
+                smooth:true, //数据光滑过度
+                symbol:'none', //下一个数据点
+                stack:'a',
+                areaStyle:{
+                    normal:{
+                        color:'white'
+                    }
+                },
+                //电流数据从后台获取
+                data:[]
+            }]
+        });
+
+        myChart.showLoading();  //数据加载完成前先显示一段简单的loading动画
+
+        var dianliang_y = [];//存放小时时间
+        var dianliang_mon = []; //存放小时时间
+        var dianliang_d = []; //存放小时时间
+        var dianliang_h = []; //存放小时时间
+        var dianliang_m = []; //存放分钟时间
+        var dianliang_s = [];//存放秒数时间
+        var dianliang_time = [];
+        var dianliang_data = []; //存放电流数据
+
+        //异步从后台获取数据
+        function ajax_post(shift) {
+            $.ajax({
+                url: "/dianliang/",
+                type:'post',
+                data:{},
+                dataType:'json',
+                success:function (data) {
+                    if(data){
+                        //电流值
+                        dianliang_data.push(data[0]['dianliang_value']);
+                        console.log(dianliang_data);
+                        //时间值
+                        dianliang_y.push(data[1]['dianliang_y']);
+                        dianliang_mon.push(data[2]['dianliang_mon']);
+                        dianliang_d.push(data[3]['dianliang_d']);
+                        dianliang_h.push(data[4]['dianliang_h']);
+                        dianliang_m.push(data[5]['dianliang_m']);
+                        dianliang_s.push(data[6]['dianliang_s']);
+
+                        //时间设置
+                        var now = [dianliang_h[dianliang_h.length-1]+":"+dianliang_m[dianliang_m.length-1]+":"+dianliang_s[dianliang_s.length-1]];
+                        dianliang_time.push(now);
+
+                        //移除数组中的第一个元素
+                        if(shift){
+                             dianliang_y.shift();
+                             dianliang_mon.shift();
+                             dianliang_d.shift();
+                             dianliang_h.shift();
+                             dianliang_m.shift();
+                             dianliang_s.shift();
+                             dianliang_time.shift();
+                             dianliang_data.shift();
+                        }
+                        myChart.hideLoading();  //隐藏动画
+                        myChart.setOption({
+                            title:{
+                                text:'实时电量监测数据'
+                            },
+                            xAxis:{
+                                type:"category",
+                                boundaryGap:false,
+                                //日期时间
+                                data:dianliang_time
+                            },
+                            yAxis:{
+                                boundaryGap:[0,'100%'],
+                                type:'value',
+                                axisLabel:{
+                                    formatter:'{value}(C)'
+                                }
+                            },
+                            series:[{
+                                name:'成交',
+                                type:'line',
+                                smooth:true, //数据光滑过度
+                                symbol:'none', //下一个数据点
+                                stack:'a',
+                                areaStyle:{
+                                    normal:{
+                                        color:'white'
+                                    }
+                                },
+                                //电流数据
+                                data:dianliang_data
+                            }]
+                        });
+                    }
+                }
+            });
+        }
+
+    for(var i=0;i<10;i++){
+        ajax_post()
+    }
+
+    setInterval(function () {
+        ajax_post(true)
+    },1000);
+    </script>
+{% endblock %}
